@@ -30,12 +30,11 @@ module Data.Text.Identifiers
 import Control.Applicative hiding (empty)
 import Data.Binary
 import Data.List (foldl')
-import Data.Hashable
 import Data.HashMap.Lazy (HashMap)
 import Data.Map (Map)
 import Data.Maybe
 import Data.Text (Text)
-import Data.Text.Binary
+import Data.Text.Binary ()
 import qualified Data.Map as M
 import qualified Data.HashMap.Lazy as H
 
