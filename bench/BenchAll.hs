@@ -10,9 +10,9 @@ benchRoundtrip = toList . fromList . genNames
 
 main :: IO ()
 main = defaultMain [
-        bgroup "insert" [ bench "1000"   $ nf benchRoundtrip 1000
-                        , bench "10000"  $ nf benchRoundtrip 10000
-                        , bench "100000" $ nf benchRoundtrip 100000
+        bgroup "insert" [ bench "    1,000" $ nf benchRoundtrip 1000
+                        , bench "   10,000" $ nf benchRoundtrip 10000
+                        , bench "  100,000" $ nf benchRoundtrip 100000
                         ]
         ]
 
