@@ -1,12 +1,12 @@
 module Main where
 
 import Criterion.Main
-import Data.Text (Text, pack)
+import Data.Text (pack)
 import Data.Text.Identifiers
 
-benchRoundtrip :: Int -> [Text]
-benchRoundtrip = toList . fromList . genNames
-    where genNames n = map (pack . show) . take n $ ([1000000..] :: [Int])
+benchRoundtrip :: Int -> Identifiers
+benchRoundtrip = fromList . genNames
+    where genNames n = map (pack . show) . take n $ ([100000000..] :: [Int])
 
 main :: IO ()
 main = defaultMain [
