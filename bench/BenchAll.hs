@@ -38,14 +38,14 @@ main = do
             , setC `deepseq` bench "100,000" $ nf fromList setC
             ]
         , bgroup "lookupKey"
-            [ idA `deepseq` bench "  1,000" $ nf (flip lookupKey 500)   idA
-            , idB `deepseq` bench " 10,000" $ nf (flip lookupKey 5000)  idB
-            , idC `deepseq` bench "100,000" $ nf (flip lookupKey 50000) idC
+            [ idA `deepseq` bench "  1,000" $ nf (`lookupKey` 500)   idA
+            , idB `deepseq` bench " 10,000" $ nf (`lookupKey` 5000)  idB
+            , idC `deepseq` bench "100,000" $ nf (`lookupKey` 50000) idC
             ]
         , bgroup "lookupId"
-            [ bench "  1,000" $ nf (flip lookupId "100000500") idA
-            , bench " 10,000" $ nf (flip lookupId "100005000") idB
-            , bench "100,000" $ nf (flip lookupId "100050000") idC
+            [ bench "  1,000" $ nf (`lookupId` "100000500") idA
+            , bench " 10,000" $ nf (`lookupId` "100005000") idB
+            , bench "100,000" $ nf (`lookupId` "100050000") idC
             ]
         , bgroup "encode"
             [ bench "  1,000" $ nf encode idA
