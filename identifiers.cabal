@@ -30,6 +30,9 @@ benchmark bench-builder-all
   main-is:             BenchAll.hs
   build-depends:       base >=4.6 && <4.7,
                        criterion,
+                       binary ==0.7.*,
+                       deepseq ==1.3.*,
+                       bytestring ==0.10.*,
                        identifiers,
                        text ==0.11.*
   default-language:    Haskell2010
