@@ -1,15 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Main where
 
+import Control.Applicative
 import Control.DeepSeq
 import Criterion.Main
 import Data.Binary
 import Data.ByteString.Lazy (ByteString)
-import Data.Text (Text, pack)
-import Data.Text.Identifiers
+import Data.Text (Text, pack, unpack)
+import Data.Identifiers
 
+instance Binary Text where
+    put = put . unpack
+    get = pack <$> get
+    
 genNames :: Int -> [Text]
 genNames n = map (pack . show) . take n $ ([100000000..] :: [Int])
+
+decodeI :: ByteString -> Identifiers Text
+decodeI = decode
 
 main :: IO ()
 main = do
@@ -44,9 +53,9 @@ main = do
             , bench "100,000" $ nf encode idC
             ]
         , bgroup "decode"
-            [ encA `deepseq` bench "  1,000" $ nf (decode :: ByteString -> Identifiers) encA
-            , encB `deepseq` bench " 10,000" $ nf (decode :: ByteString -> Identifiers) encB
-            , encC `deepseq` bench "100,000" $ nf (decode :: ByteString -> Identifiers) encC
+            [ encA `deepseq` bench "  1,000" $ nf decodeI encA
+            , encB `deepseq` bench " 10,000" $ nf decodeI encB
+            , encC `deepseq` bench "100,000" $ nf decodeI encC
             ]
         ]
 

@@ -6,7 +6,7 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck.Arbitrary
 
 import Data.Text (Text, pack)
-import Data.Text.Identifiers
+import Data.Identifiers
 
 instance Arbitrary Text where
     arbitrary = fmap pack arbitrary
