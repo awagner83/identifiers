@@ -29,6 +29,7 @@ module Data.Identifiers
     , prop_hasId
     , prop_stableId
     , prop_keyRetrieval
+    , prop_keyRetrievalUnsafe
     , prop_idempotent
 
     ) where
@@ -95,7 +96,7 @@ unsafeLookupId = (H.!) . ids
 -- | Find key for given id
 lookupKey :: Identifiers a -> Int -> Maybe a
 lookupKey ident x = let xs = names ident
-                    in if S.length xs > x
+                    in if S.length xs < x
                        then Nothing
                        else Just $ unsafeLookupKey ident x
 
@@ -122,9 +123,15 @@ prop_stableId x = isJust a && a == b
           secondSet = insert firstSet x
 
 -- | Given id can be used to fetch inserted item
-prop_keyRetrieval :: [String] -> Bool
-prop_keyRetrieval xs = all (\x -> ret x == x) xs
+prop_keyRetrievalUnsafe :: [String] -> Bool
+prop_keyRetrievalUnsafe xs = all (\x -> ret x == x) xs
     where ret = unsafeLookupKey s . unsafeLookupId s
+          s = insertMany empty xs
+
+-- | Given id can be used to fetch inserted item
+prop_keyRetrieval :: [String] -> Bool
+prop_keyRetrieval xs = all (\x -> ret x == Just (Just x)) xs
+    where ret x = lookupKey s <$> lookupId s x
           s = insertMany empty xs
 
 -- | Inserting something more than once does not change the set

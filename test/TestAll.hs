@@ -16,10 +16,11 @@ main = defaultMain tests
 
 tests :: [Test]
 tests = [ testGroup "QuickCheck PowerMap.Data.IdSet"
-            [ testProperty "hasId"          prop_hasId
-            , testProperty "stableId"       prop_stableId
-            , testProperty "keyRetrieval"   prop_keyRetrieval
-            , testProperty "idempotent"     prop_idempotent
+            [ testProperty "hasId"                prop_hasId
+            , testProperty "stableId"             prop_stableId
+            , testProperty "keyRetrieval"         prop_keyRetrieval
+            , testProperty "keyRetrievalUnsafe"   prop_keyRetrievalUnsafe
+            , testProperty "idempotent"           prop_idempotent
             ]
         ]
 
