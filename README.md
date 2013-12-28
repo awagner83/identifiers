@@ -1,4 +1,4 @@
-Identifiers - Int ids for given values.
+Identifiers - Int ids for values.
 =======================================
 
 Example:
