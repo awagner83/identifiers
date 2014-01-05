@@ -3,13 +3,8 @@ module Main where
 
 import Test.Framework (defaultMain, testGroup, Test)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck.Arbitrary
 
-import Data.Text (Text, pack)
 import Data.Identifiers
-
-instance Arbitrary Text where
-    arbitrary = fmap pack arbitrary
 
 main :: IO ()
 main = defaultMain tests
