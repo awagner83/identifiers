@@ -1,5 +1,5 @@
 name:                identifiers
-version:             0.2.0.0
+version:             0.2.0.1
 synopsis:            Numeric identifiers for values.
 description:         Useful for situations where repeated-storage requirements
                      of values become too costly.
