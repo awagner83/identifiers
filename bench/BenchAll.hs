@@ -2,25 +2,19 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Main where
 
-import Control.Applicative
 import Control.DeepSeq
 import Criterion.Main
 import Data.Binary
 import Data.ByteString.Lazy (ByteString)
-import Data.Text (Text, pack, unpack)
 import Data.Identifiers
-
-instance Binary Text where
-    put = put . unpack
-    get = pack <$> get
     
-genNames :: Int -> [Text]
-genNames n = map (pack . show) . take n $ ([100000000..] :: [Int])
+genNames :: Int -> [String]
+genNames n = map show . take n $ ([100000000..] :: [Int])
 
-decodeI :: ByteString -> Identifiers Word32 Text
+decodeI :: ByteString -> Identifiers Word32 String
 decodeI = decode
 
-fromListI :: [Text] -> Identifiers Word32 Text
+fromListI :: [String] -> Identifiers Word32 String
 fromListI = fromList
 
 main :: IO ()
