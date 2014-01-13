@@ -40,8 +40,10 @@ import Data.Hashable
 import Data.HashMap.Lazy (HashMap)
 import Data.Maybe
 import Data.Sequence (Seq, (|>))
+import Data.Serialize (Serialize)
 import qualified Data.HashMap.Lazy as H
 import qualified Data.Sequence as S
+import qualified Data.Serialize as C
 
 
 data Identifiers i a = Identifiers { ids   :: !(HashMap a i)
@@ -54,6 +56,10 @@ instance Show a => Show (Identifiers i a) where
 instance (Binary i, Eq a, Hashable a, Binary a) => Binary (Identifiers i a) where
     put s = put (H.toList $ ids s) >> put (names s)
     get = Identifiers <$> (H.fromList <$> get) <*> get
+
+instance (Serialize i, Eq a, Hashable a, Serialize a) => Serialize (Identifiers i a) where
+    put s = C.put (H.toList $ ids s) >> C.put (names s)
+    get = Identifiers <$> (H.fromList <$> C.get) <*> C.get
 
 instance (NFData i, NFData a) => NFData (Identifiers i a) where
     rnf (Identifiers i n) = rnf (i, n)
