@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Main where
 
 import Control.DeepSeq
@@ -16,27 +15,22 @@ fromListI = fromList
 
 main :: IO ()
 main = do
-    let setA = genNames 1000
-        setB = genNames 10000
-        setC = genNames 100000
+    let setA = genNames 2000
+        setB = genNames 200000
         idA = fromListI setA
         idB = fromListI setB
-        idC = fromListI setC
     defaultMain
         [ bgroup "fromList"
-            [ setA `deepseq` bench "  1,000" $ nf fromListI setA
-            , setB `deepseq` bench " 10,000" $ nf fromListI setB
-            , setC `deepseq` bench "100,000" $ nf fromListI setC
+            [ setA `deepseq` bench "  2,000" $ nf fromListI setA
+            , setB `deepseq` bench "200,000" $ nf fromListI setB
             ]
         , bgroup "lookupKey"
-            [ idA `deepseq` bench "  1,000" $ nf (`lookupKey` 500)   idA
-            , idB `deepseq` bench " 10,000" $ nf (`lookupKey` 5000)  idB
-            , idC `deepseq` bench "100,000" $ nf (`lookupKey` 50000) idC
+            [ idA `deepseq` bench "  2,000" $ nf (`lookupKey` 500)   idA
+            , idB `deepseq` bench "200,000" $ nf (`lookupKey` 50000) idB
             ]
         , bgroup "lookupId"
-            [ bench "  1,000" $ nf (`lookupId` "100000500") idA
-            , bench " 10,000" $ nf (`lookupId` "100005000") idB
-            , bench "100,000" $ nf (`lookupId` "100050000") idC
+            [ bench "  2,000" $ nf (`lookupId` "100000500") idA
+            , bench "200,000" $ nf (`lookupId` "100050000") idB
             ]
         ]
 
