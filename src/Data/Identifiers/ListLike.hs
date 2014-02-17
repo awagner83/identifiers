@@ -24,14 +24,12 @@ module Data.Identifiers.ListLike
     , unsafeLookupKey
     , (!)
 
-    {-
     -- * Properties
     , prop_hasId
     , prop_stableId
     , prop_keyRetrieval
     , prop_keyRetrievalUnsafe
     , prop_idempotent
-    -}
 
     ) where
 
@@ -53,7 +51,7 @@ import qualified Data.ListLike as LL
 
 data Identifiers i n u = Identifiers { ids   :: !(TrieMap u i)
                                      , names :: !(Seq n)
-                                     }
+                                     } deriving Eq
 
 instance (Show n) => Show (Identifiers i n u) where
     show s = "insertMany empty " ++ show (F.toList (names s))
@@ -123,33 +121,31 @@ unsafeLookupKey xs x = S.index (names xs) (fromIntegral x)
 (!) :: Integral i => Identifiers i n u -> i -> n
 (!) = unsafeLookupKey
 
-{-
 -- | Items inserted are given ids
 prop_hasId :: String -> Bool
-prop_hasId x = isJust . lookupId (insert (empty :: Identifiers Int String) x) $ x
+prop_hasId x = isJust . lookupId (insert (empty :: Identifiers Int String Char) x) $ x
 
 -- | Inserted items have stable ids
 prop_stableId :: String -> Bool
 prop_stableId x = isJust a && a == b
     where a = lookupId firstSet x
           b = lookupId secondSet x
-          firstSet = insert (empty :: Identifiers Int String) x
+          firstSet = insert (empty :: Identifiers Int String Char) x
           secondSet = insert firstSet x
 
 -- | Given id can be used to fetch inserted item
 prop_keyRetrievalUnsafe :: [String] -> Bool
 prop_keyRetrievalUnsafe xs = all (\x -> ret x == x) xs
     where ret = unsafeLookupKey s . unsafeLookupId s
-          s = insertMany (empty :: Identifiers Int String) xs
+          s = insertMany (empty :: Identifiers Int String Char) xs
 
 -- | Given id can be used to fetch inserted item
 prop_keyRetrieval :: [String] -> Bool
 prop_keyRetrieval xs = all (\x -> ret x == Just (Just x)) xs
     where ret x = lookupKey s <$> lookupId s x
-          s = insertMany (empty :: Identifiers Int String) xs
+          s = insertMany (empty :: Identifiers Int String Char) xs
 
 -- | Inserting something more than once does not change the set
 prop_idempotent :: String -> Bool
-prop_idempotent x = insert (empty :: Identifiers Int String) x
+prop_idempotent x = insert (empty :: Identifiers Int String Char) x
                         == insert (insert empty x) x
--}
