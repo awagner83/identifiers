@@ -8,6 +8,7 @@ import Prelude hiding (lookup)
 data TrieMap k v = Map !(Maybe v) [TrieNode k v] deriving (Show, Eq)
 data TrieNode k v = EmptyNode !k    [TrieNode k v]
                   | ValueNode !k !v [TrieNode k v]
+                  | ValueEnd  !k !v
                   deriving (Show, Eq)
 
 instance (NFData k, NFData v) => NFData (TrieMap k v) where
@@ -16,6 +17,7 @@ instance (NFData k, NFData v) => NFData (TrieMap k v) where
 instance (NFData k, NFData v) => NFData (TrieNode k v) where
     rnf (EmptyNode k ns)   = rnf (k, ns)
     rnf (ValueNode k v ns) = rnf (k, v, ns)
+    rnf (ValueEnd k v)     = rnf (k, v)
 
 
 -- | The empty TrieMap
@@ -40,6 +42,11 @@ lookup (Map _ ns)       ks = go ns ks where
                                              | otherwise = go ns' ks'
     go (ValueNode j _ next:ns') ks'@(k:ks'') | j == k    = go next ks''
                                              | otherwise = go ns' ks'
+    go (ValueEnd j v:ns')       ks'@[k]      | j == k    = Just v
+                                             | otherwise = go ns' ks'
+    go (ValueEnd j _:ns')       ks'@(k:_)    | j == k    = Nothing
+                                             | otherwise = go ns' ks'
+
 
 (!) :: Eq k => TrieMap k v -> [k] -> v
 m ! k | Just v <- lookup m k = v
@@ -51,18 +58,23 @@ insert (Map Nothing ns) [] v  = Map (Just v) ns
 insert m                [] _  = m       -- Don't clobber existing values
 insert (Map v ns)       ks v' = Map v $ go ns ks where
     go _  []        = []    -- Not sure how we got here; try to handle anyway.
-    go [] (x:[])    = [ValueNode x v' []]
+    go [] (x:[])    = [ValueEnd x v']
     go [] (x:xs)    = [EmptyNode x (go [] xs)]
 
     -- Last key unit vs ValueNode
-    go ns''@(n@(ValueNode j _ _):ns') xs'@(x:[])
+    go ns''@(n@(ValueNode j _ _):ns') xs'@[x]
         | j == x    = ns''                          -- No clobber
         | otherwise = n : go ns' xs'
 
     -- Last key unit vs EmptyNode
-    go (n@(EmptyNode j next):ns') xs'@(x:[])
+    go (n@(EmptyNode j next):ns') xs'@[x]
         | j == x    = ValueNode j v' next : ns'     -- Promote to ValueNode
         | otherwise = n : go ns' xs'
+
+    -- Last key unit vs ValueEnd
+    go ns''@(n@(ValueEnd j _):ns') xs@[x]
+        | j == x    = ns''                          -- No clobber
+        | otherwise = n : go ns' xs
 
     -- Key unit vs ValueNode
     go (n@(ValueNode j w next):ns') xs'@(x:xs)
@@ -73,6 +85,12 @@ insert (Map v ns)       ks v' = Map v $ go ns ks where
     go (n@(EmptyNode j next):ns') xs'@(x:xs)
         | j == x    = EmptyNode j (go next xs) : ns'    -- Decend into node
         | otherwise = n : go ns' xs'
+
+    -- Key unit vs ValueEnd
+    go (n@(ValueEnd j w):ns') xs'@(x:xs)
+        | j == x    = ValueNode j w (go [] xs) : ns'    -- Promote to ValueNode
+        | otherwise = n : go ns' xs'
+
 
 {-
 insert []                (k:[]) v           = [R k (Just v) []]
