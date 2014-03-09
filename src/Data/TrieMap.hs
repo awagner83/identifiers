@@ -13,7 +13,6 @@ data TrieMap k v  = Root              !(TrieNode k v)
 
 data TrieNode k v = Node        !k    !(TrieNode k v) !(TrieNode k v)
                   | Vertical    !k    !(TrieNode k v)
-                  | Horizontal  !k                    !(TrieNode k v)
                   | ValueVert   !k !v !(TrieNode k v)
                   | ValueHoriz  !k !v                 !(TrieNode k v)
                   | ValueNode   !k !v !(TrieNode k v) !(TrieNode k v)
@@ -29,7 +28,6 @@ instance (NFData k, NFData v) => NFData (TrieMap k v) where
 instance (NFData k, NFData v) => NFData (TrieNode k v) where
     rnf (Node a b c)        = rnf (a, b, c)
     rnf (Vertical a b)      = rnf (a, b)
-    rnf (Horizontal a b)    = rnf (a, b)
     rnf (ValueVert a b c)   = rnf (a, b, c)
     rnf (ValueHoriz a b c)  = rnf (a, b, c)
     rnf (ValueNode a b c d) = rnf (a, b, c, d)
@@ -70,9 +68,6 @@ lookupNode (ValueBottom k v) (x:xs)
 lookupNode (Vertical k down) (x:xs)
     | null xs || x /= k = Nothing
     | otherwise         = lookupNode down xs
-lookupNode (Horizontal k right) ks@(x:_)
-    | x /= k            = Nothing
-    | otherwise         = lookupNode right ks
 lookupNode (ValueVert k v down) (x:xs)
     | null xs && x == k = Just v
     |            x == k = lookupNode down xs
@@ -109,10 +104,6 @@ insertNode (Vertical k down) ks@(x:xs) v
     | null xs && x == k = ValueVert k v down
     |            x == k = Vertical k $ insertNode down xs v
     | otherwise         = Node k down $ createNode ks v
-insertNode (Horizontal k right) ks@(x:xs) v
-    | null xs && x == k = ValueHoriz k v right
-    |            x == k = Node k (createNode xs v) right
-    | otherwise         = Horizontal k $ insertNode right ks v
 insertNode (ValueVert k w down) ks@(x:xs) v
     | null xs && x == k = ValueVert k v down
     |            x == k = ValueVert k w $ insertNode down xs v

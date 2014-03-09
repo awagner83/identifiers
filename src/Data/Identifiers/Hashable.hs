@@ -1,4 +1,4 @@
-module Data.Identifiers
+module Data.Identifiers.Hashable
     ( Identifiers ()
     
     -- * Construction
