@@ -4,7 +4,7 @@ module Main where
 import Control.DeepSeq
 import Criterion.Main
 import Data.Binary
-import Data.Identifiers
+import Data.Identifiers.Hashable
 import Data.Text (Text, pack)
     
 genNames :: Int -> [Text]
