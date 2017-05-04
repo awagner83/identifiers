@@ -5,6 +5,7 @@ module Data.Identifiers.ListLike
     -- * Construction
     , empty
     , fromList
+    , combine
     
     -- * Insertion
     , insert
@@ -30,18 +31,23 @@ module Data.Identifiers.ListLike
     , prop_keyRetrieval
     , prop_keyRetrievalUnsafe
     , prop_idempotent
+    , prop_stableCombine
+    , prop_properMigration
 
     ) where
 
+import Control.Arrow ((&&&))
 import Control.Applicative hiding (empty)
 import Control.DeepSeq
 import Data.Binary
-import Data.List (foldl')
+import Data.List (foldl', isPrefixOf)
+import Data.Map (Map)
 import Data.Maybe
 import Data.Sequence (Seq, (|>))
 import Data.Serialize (Serialize)
 import Data.ListLike (ListLike)
 import Data.TrieMap (TrieMap)
+import qualified Data.Map as M
 import qualified Data.TrieMap as TM
 import qualified Data.Sequence as S
 import qualified Data.Serialize as C
@@ -76,6 +82,18 @@ empty = Identifiers TM.empty S.empty
 -- | New Identifiers from list
 fromList :: (ListLike n u, Eq u, Integral i) => [n] -> Identifiers i n u
 fromList = insertMany empty
+
+-- | Combine two identifier sets into one.
+--   Because the ids will change while combining two sets, a map is also
+--   returned that identifies the new location of old ids for the second
+--   set passed in.
+combine
+    :: (ListLike n u, Integral i, Eq u)
+    => Identifiers i n u -> Identifiers i n u -> (Identifiers i n u, Map i i)
+combine a b = let c  = (insertMany a) xs
+                  xs = toList b
+                  m  = M.fromList $ map (unsafeLookupId b &&& unsafeLookupId c) xs
+              in (c, m)
 
 -- | Insert item into set (given it a new id)
 insert :: (ListLike n u, Eq u, Integral i)
@@ -149,3 +167,17 @@ prop_keyRetrieval xs = all (\x -> ret x == Just (Just x)) xs
 prop_idempotent :: String -> Bool
 prop_idempotent x = insert (empty :: Identifiers Int String Char) x
                         == insert (insert empty x) x
+
+-- | Ids for the first set passed to combine remain unchanged
+prop_stableCombine :: [String] -> [String] -> Bool
+prop_stableCombine (fromList -> xs) (fromList -> ys) =
+    let (zs, _) = combine xs (ys :: Identifiers Int String Char)
+    in (toList xs) `isPrefixOf` (toList zs)
+
+-- | Ensure the migration points to the same value in both old and new sets
+prop_properMigration :: [String] -> [String] -> Bool
+prop_properMigration (fromList -> xs) (fromList -> ys) =
+    let (zs, m) = combine xs (ys :: Identifiers Int String Char)
+    in and [ (unsafeLookupKey ys k) == (unsafeLookupKey zs v)
+             | (k, v) <- M.toList m ]
+

@@ -17,6 +17,8 @@ tests = [ testGroup "QuickCheck Data.Identifiers.Hashable"
             , testProperty "keyRetrieval"         H.prop_keyRetrieval
             , testProperty "keyRetrievalUnsafe"   H.prop_keyRetrievalUnsafe
             , testProperty "idempotent"           H.prop_idempotent
+            , testProperty "stableCombine"        H.prop_stableCombine
+            , testProperty "propermigration"      H.prop_properMigration
             ]
         , testGroup "QuickCheck Data.Identifiers.ListLike"
             [ testProperty "hasId"                L.prop_hasId
@@ -24,6 +26,8 @@ tests = [ testGroup "QuickCheck Data.Identifiers.Hashable"
             , testProperty "keyRetrieval"         L.prop_keyRetrieval
             , testProperty "keyRetrievalUnsafe"   L.prop_keyRetrievalUnsafe
             , testProperty "idempotent"           L.prop_idempotent
+            , testProperty "stableCombine"        L.prop_stableCombine
+            , testProperty "propermigration"      L.prop_properMigration
             ]
         ]
 

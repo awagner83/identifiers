@@ -1,9 +1,11 @@
+{-# LANGUAGE ViewPatterns #-}
 module Data.Identifiers.Hashable
     ( Identifiers ()
     
     -- * Construction
     , empty
     , fromList
+    , combine
     
     -- * Insertion
     , insert
@@ -29,21 +31,27 @@ module Data.Identifiers.Hashable
     , prop_keyRetrieval
     , prop_keyRetrievalUnsafe
     , prop_idempotent
+    , prop_stableCombine
+    , prop_properMigration
 
     ) where
 
+import Control.Arrow ((&&&))
 import Control.Applicative hiding (empty)
 import Control.DeepSeq
 import Data.Binary
-import Data.List (foldl')
+import Data.List (foldl', isPrefixOf)
 import Data.Hashable
 import Data.HashMap.Lazy (HashMap)
+import Data.Map (Map)
 import Data.Maybe
 import Data.Sequence (Seq, (|>))
 import Data.Serialize (Serialize)
+import qualified Data.Map as M
 import qualified Data.HashMap.Lazy as H
 import qualified Data.Sequence as S
 import qualified Data.Serialize as C
+import qualified Data.Foldable as F
 
 
 data Identifiers i a = Identifiers { ids   :: !(HashMap a i)
@@ -51,7 +59,7 @@ data Identifiers i a = Identifiers { ids   :: !(HashMap a i)
                                    } deriving Eq
 
 instance Show a => Show (Identifiers i a) where
-    show s = "insertMany empty " ++ show (H.keys (ids s))
+    show s = "insertMany empty " ++ show (toList s)
 
 instance (Binary i, Eq a, Hashable a, Binary a) => Binary (Identifiers i a) where
     put s = put (H.toList $ ids s) >> put (names s)
@@ -72,6 +80,18 @@ empty = Identifiers H.empty S.empty
 fromList :: (Integral i, Hashable a, Eq a) => [a] -> Identifiers i a
 fromList = insertMany empty
 
+-- | Combine two identifier sets into one.
+--   Because the ids will change while combining two sets, a map is also
+--   returned that identifies the new location of old ids for the second
+--   set passed in.
+combine
+    :: (Integral i, Hashable a, Eq a)
+    => Identifiers i a -> Identifiers i a -> (Identifiers i a, Map i i)
+combine a b = let c  = (insertMany a) xs
+                  xs = toList b
+                  m  = M.fromList $ map (unsafeLookupId b &&& unsafeLookupId c) xs
+              in (c, m)
+
 -- | Insert item into set (given it a new id)
 insert :: (Integral i, Hashable a, Eq a) => Identifiers i a -> a -> Identifiers i a
 insert xs v = case H.lookup v (ids xs) of
@@ -85,7 +105,7 @@ insertMany = foldl' insert
 
 -- | New List from Identifiers
 toList :: Identifiers i a -> [a]
-toList = H.keys . ids
+toList (names -> xs) = F.toList xs
 
 -- | Find id for given key
 lookupId :: (Hashable a, Eq a) => Identifiers i a -> a -> Maybe i
@@ -142,4 +162,17 @@ prop_keyRetrieval xs = all (\x -> ret x == Just (Just x)) xs
 prop_idempotent :: String -> Bool
 prop_idempotent x = insert (empty :: Identifiers Int String) x
                         == insert (insert empty x) x
+
+-- | Ids for the first set passed to combine remain unchanged
+prop_stableCombine :: [String] -> [String] -> Bool
+prop_stableCombine (fromList -> xs) (fromList -> ys) =
+    let (zs, _) = combine xs (ys :: Identifiers Int String)
+    in (toList xs) `isPrefixOf` (toList zs)
+
+-- | Ensure the migration points to the same value in both old and new sets
+prop_properMigration :: [String] -> [String] -> Bool
+prop_properMigration (fromList -> xs) (fromList -> ys) =
+    let (zs, m) = combine xs (ys :: Identifiers Int String)
+    in and [ (unsafeLookupKey ys k) == (unsafeLookupKey zs v)
+             | (k, v) <- M.toList m ]
 
