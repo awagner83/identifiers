@@ -19,8 +19,8 @@ Running Benchmarks
 Example:
 --------
 
-    > import Data.Identifiers
-    > let myIds = fromList ["foo", "bar", "baz"] :: Identifiers Int String
+    > import Data.Identifiers.ListLike
+    > let myIds = fromList ["foo", "bar", "baz"] :: Identifiers Int String Char
     > lookupId myIds "baz"
     Just 2
     > lookupKey myIds 2
