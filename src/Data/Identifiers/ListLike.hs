@@ -1,3 +1,20 @@
+{-|
+Module      : Data.Identifiers.ListLike
+Description : Identifiers for ListLike values
+Copyright   : (c) Adam Wagner, 2017
+
+Identifiers for ListLike values.
+
+Example usage:
+
+>>> xs = fromList ["foo", "bar", "baz", "foo"]
+>>> lookupId xs "baz"
+Just 2
+>>> lookupKey xs 2
+Just "baz"
+
+-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ViewPatterns #-}
 module Data.Identifiers.ListLike
     ( Identifiers ()
@@ -36,8 +53,11 @@ module Data.Identifiers.ListLike
 
     ) where
 
-import Control.Arrow ((&&&))
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative hiding (empty)
+#endif
+
+import Control.Arrow ((&&&))
 import Control.DeepSeq
 import Data.Binary
 import Data.List (foldl', isPrefixOf)
@@ -112,13 +132,15 @@ insertMany = foldl' insert
 toList :: Identifiers i n u -> [n]
 toList = F.toList . names
 
--- | Find id for given key
+-- | Find id for given value
 lookupId :: (Eq u, ListLike n u) => Identifiers i n u -> n -> Maybe i
 lookupId (ids -> m) (LL.toList -> k) = TM.lookup m k
 
+-- | Number of items in Identifiers value
 size :: Identifiers i n u -> Int
 size = S.length . names
 
+-- | Find numeric id for given value.  Will error when the value is not a member of the Identifiers map.
 unsafeLookupId :: (ListLike n u, Eq u) => Identifiers i n u -> n -> i
 unsafeLookupId (ids -> m) (LL.toList -> k) = m TM.! k
 
@@ -129,13 +151,15 @@ lookupKey ident x = let xs = names ident
                        then Nothing
                        else Just $ unsafeLookupKey ident x
 
--- | Given many ids, return many keys
+-- | Given many ids, return many keys.  Ids with no associated values will be omitted from the resulting list.
 lookupKeys :: (Integral i) => Identifiers i n u -> [i] -> [n]
 lookupKeys s = mapMaybe (lookupKey s)
 
+-- | Find id for given value.  Will error when the id has no associated value.
 unsafeLookupKey :: Integral i => Identifiers i n u -> i -> n
 unsafeLookupKey xs x = S.index (names xs) (fromIntegral x)
 
+-- | Infix version of unsafeLookupKey
 (!) :: Integral i => Identifiers i n u -> i -> n
 (!) = unsafeLookupKey
 

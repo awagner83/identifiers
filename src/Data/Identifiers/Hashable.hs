@@ -1,3 +1,20 @@
+{-|
+Module      : Data.Identifiers.Hashable
+Description : Identifiers for Hashable values
+Copyright   : (c) Adam Wagner, 2017
+
+Identifiers for Hashable values.
+
+Example usage:
+
+>>> xs = fromList ["foo", "bar", "baz", "foo"]
+>>> lookupId xs "baz"
+Just 2
+>>> lookupKey xs 2
+Just "baz"
+
+-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ViewPatterns #-}
 module Data.Identifiers.Hashable
     ( Identifiers ()
@@ -36,8 +53,11 @@ module Data.Identifiers.Hashable
 
     ) where
 
-import Control.Arrow ((&&&))
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative hiding (empty)
+#endif
+
+import Control.Arrow ((&&&))
 import Control.DeepSeq
 import Data.Binary
 import Data.List (foldl', isPrefixOf)
@@ -111,9 +131,11 @@ toList (names -> xs) = F.toList xs
 lookupId :: (Hashable a, Eq a) => Identifiers i a -> a -> Maybe i
 lookupId = flip H.lookup . ids
 
+-- | Number of items in Identifiers value
 size :: Identifiers i a -> Int
 size = S.length . names
 
+-- | Find numeric id for given value.  Will error when the value is not a member of the Identifiers map.
 unsafeLookupId :: (Hashable a, Eq a) => Identifiers i a -> a -> i
 unsafeLookupId = (H.!) . ids
 
@@ -128,9 +150,11 @@ lookupKey ident x = let xs = names ident
 lookupKeys :: (Integral i) => Identifiers i a -> [i] -> [a]
 lookupKeys s = mapMaybe (lookupKey s)
 
+-- | Find id for given value.  Will error when the id has no associated value.
 unsafeLookupKey :: Integral i => Identifiers i a -> i -> a
 unsafeLookupKey xs x = S.index (names xs) (fromIntegral x)
 
+-- | Infix version of unsafeLookupKey
 (!) :: Integral i => Identifiers i a -> i -> a
 (!) = unsafeLookupKey
 
