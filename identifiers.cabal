@@ -6,7 +6,7 @@ description:         This library allows you to turn costly repetitive values
 
                      An Identifiers value acts like a bi-directional map that
                      allows you to effeciently toggle between a numeric key
-                     and the original value push into the map.
+                     and the original value pushed into the map.
 
 license:             BSD3
 license-file:        LICENSE
